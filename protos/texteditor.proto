@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package chat;
+
+// Interface exported by the server.
+service TextEditor {
+    // A simple RPC.
+    //
+    // Signs in existing user and gets unread messages.
+    rpc SignInExisting(Username) returns (Welcome) {}
+    // Signs in new user and gets unread messages.
+    rpc AddUser(Username) returns (Welcome) {}
+    
+    // Opens new text file
+    rpc OpenNewFile(Download) returns (FileResponse) {}
+    // Opens existing text file
+    rpc OpenExistingFile(Download) returns (FileResponse) {}
+
+    // Sends message to recipient with Username
+    rpc Send(SendRequest) returns (Payload) {}
+    // Response stream for client to receive messages from server
+    rpc Listen(Username) returns (stream Payload) {}
+    // Lists all usernames that match the optional text wildcard
+    rpc List(Payload) returns (Payload) {}
+    // Logs out user and returns a confirmation response message
+    rpc Logout(Username) returns (Payload) {}
+    // Deletes user and returns a confirmation response message
+    rpc Delete(Username) returns (Payload) {}
+}
+
+message Username {
+    string name = 1;
+}
+
+message Welcome {
+    string welcomeMsg = 1;
+}
+
+message Download {
+    string filename = 1;
+}
+
+message FileResponse {
+    string filename = 1;
+    bytes content = 2;
+}
+
+// If errorFlag == 1, unreads is an error message. 
+// Else, unreads is a list of unread messages.
+message Unreads {
+    bool errorFlag = 1;
+    string unreads = 2; 
+}
+
+// If sent from the sender's client to the server, Payload is a message to send.
+// If sent from server to sender, Payload is sent confirmation.
+// If sent from server to recipient, Payload is sent message. 
+// Can also be error message or logout/delete confirmation.
+message Payload {
+    string msg = 1;
+}
+
+message SendRequest {
+    Username sender = 1;
+    Username recipient = 2;
+    Payload sentMsg = 3;
+}
+
