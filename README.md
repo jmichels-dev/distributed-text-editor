@@ -10,3 +10,25 @@ clients who are currently editing the same file.
 
 After the client is finished, they will log out, and the local copy
 of the file will be deleted.
+
+
+What needs to get done:
+
+1) Get working for single client (wip)
+    i. Open new .txt file (wip)
+    ii. Open existing .txt file
+    iii. List all files on server
+    iv. Exit file, saving copy to server
+        a) maybe snapshot feature? 
+    v. Logout feature
+        a) save file changes on server
+        b) client gracefully exits
+
+2) Get working for multiple clients
+    i. real time updates between two clients working on same doc (operational transformation algo)
+
+--------- IF TIME -----------
+
+3) Implement server replication
+
+4) GPT-3 api?
