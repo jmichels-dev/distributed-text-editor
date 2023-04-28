@@ -123,7 +123,8 @@ def listen_thread(username, stub, responseStream):
             return
 
 def run():
-    ip = '10.250.226.222'
+    # ip = '10.250.226.222'
+    ip = '10.250.64.41'
     port = '8080'
     with grpc.insecure_channel('{}:{}'.format(ip, port)) as channel:
         stub = texteditor_pb2_grpc.TextEditorStub(channel)

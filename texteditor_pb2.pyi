@@ -4,6 +4,12 @@ from typing import ClassVar as _ClassVar, Mapping as _Mapping, Optional as _Opti
 
 DESCRIPTOR: _descriptor.FileDescriptor
 
+class Data(_message.Message):
+    __slots__ = ["data"]
+    DATA_FIELD_NUMBER: _ClassVar[int]
+    data: bytes
+    def __init__(self, data: _Optional[bytes] = ...) -> None: ...
+
 class Download(_message.Message):
     __slots__ = ["filename"]
     FILENAME_FIELD_NUMBER: _ClassVar[int]
@@ -11,12 +17,12 @@ class Download(_message.Message):
     def __init__(self, filename: _Optional[str] = ...) -> None: ...
 
 class FileResponse(_message.Message):
-    __slots__ = ["content", "filename"]
-    CONTENT_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ["errorFlag", "filename"]
+    ERRORFLAG_FIELD_NUMBER: _ClassVar[int]
     FILENAME_FIELD_NUMBER: _ClassVar[int]
-    content: bytes
+    errorFlag: bool
     filename: str
-    def __init__(self, filename: _Optional[str] = ..., content: _Optional[bytes] = ...) -> None: ...
+    def __init__(self, errorFlag: bool = ..., filename: _Optional[str] = ...) -> None: ...
 
 class Payload(_message.Message):
     __slots__ = ["msg"]

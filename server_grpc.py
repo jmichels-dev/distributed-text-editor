@@ -14,14 +14,14 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
         # set of (unique) filenames
         self.filenames = set()
     
-    def openNewFile(self, download, context):
+    def OpenNewFile(self, download, context):
         if helpers.filenameExists(download.filename, self.filenames):
             return texteditor_pb2.FileResponse(errorFlag=True, filename=download.filename)
         self.filenames.add(download.filename)
         open("./usertextfiles/" + download.filename + ".txt", "w")
         return texteditor_pb2.FileResponse(errorFlag=False, filename=download.filename)
     
-    def openExistingFile(self, download, context):
+    def OpenExistingFile(self, download, context):
         print(download.filename)
         # return error if file does not exist
         try:
@@ -75,7 +75,8 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
 
 
 def serve():
-    ip = '10.250.226.222'
+    # ip = '10.250.226.222'
+    ip = '10.250.64.41'
     port = '8080'
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     texteditor_pb2_grpc.add_TextEditorServicer_to_server(TextEditorServicer(), server)
