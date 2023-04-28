@@ -5,16 +5,23 @@ import grpc
 import sys
 import texteditor_pb2
 import texteditor_pb2_grpc
+import helpers
 
 
 class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
 
     def __init__(self):
-        # {username : [loggedOnBool, [messageQueue]]}
-        self.clientDict = {}
+        # set of (unique) filenames
+        self.filenames = set()
     
-    def OpenNewFile(self, request, context):
-        return super().OpenNewFile(request, context)
+    def OpenNewFile(self, download, context):
+        print(download.filename)
+        if helpers.filenameExists(download.filename, self.filenames):
+            return texteditor_pb2.FileResponse(errorFlag=True, filename=download.filename, content=None)
+        self.filenames.add(download.filename)
+        open("./usertextfiles/" + download.filename + ".txt", "w")
+        return texteditor_pb2.FileResponse(errorFlag=False, filename=download.filename, content=None)
+
 
 #     def SignInExisting(self, username, context):
 #         eFlag, msg = helpers_grpc.signInExisting(username.name, self.clientDict)

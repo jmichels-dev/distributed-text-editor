@@ -15,16 +15,6 @@ class TextEditorStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.SignInExisting = channel.unary_unary(
-                '/chat.TextEditor/SignInExisting',
-                request_serializer=texteditor__pb2.Username.SerializeToString,
-                response_deserializer=texteditor__pb2.Welcome.FromString,
-                )
-        self.AddUser = channel.unary_unary(
-                '/chat.TextEditor/AddUser',
-                request_serializer=texteditor__pb2.Username.SerializeToString,
-                response_deserializer=texteditor__pb2.Welcome.FromString,
-                )
         self.OpenNewFile = channel.unary_unary(
                 '/chat.TextEditor/OpenNewFile',
                 request_serializer=texteditor__pb2.Download.SerializeToString,
@@ -35,14 +25,19 @@ class TextEditorStub(object):
                 request_serializer=texteditor__pb2.Download.SerializeToString,
                 response_deserializer=texteditor__pb2.FileResponse.FromString,
                 )
+        self.SignInExisting = channel.unary_unary(
+                '/chat.TextEditor/SignInExisting',
+                request_serializer=texteditor__pb2.Username.SerializeToString,
+                response_deserializer=texteditor__pb2.Welcome.FromString,
+                )
+        self.AddUser = channel.unary_unary(
+                '/chat.TextEditor/AddUser',
+                request_serializer=texteditor__pb2.Username.SerializeToString,
+                response_deserializer=texteditor__pb2.Welcome.FromString,
+                )
         self.Send = channel.unary_unary(
                 '/chat.TextEditor/Send',
                 request_serializer=texteditor__pb2.SendRequest.SerializeToString,
-                response_deserializer=texteditor__pb2.Payload.FromString,
-                )
-        self.Listen = channel.unary_stream(
-                '/chat.TextEditor/Listen',
-                request_serializer=texteditor__pb2.Username.SerializeToString,
                 response_deserializer=texteditor__pb2.Payload.FromString,
                 )
         self.List = channel.unary_unary(
@@ -66,24 +61,10 @@ class TextEditorServicer(object):
     """Interface exported by the server.
     """
 
-    def SignInExisting(self, request, context):
+    def OpenNewFile(self, request, context):
         """A simple RPC.
 
-        Signs in existing user and gets unread messages.
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def AddUser(self, request, context):
-        """Signs in new user and gets unread messages.
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def OpenNewFile(self, request, context):
-        """Opens new text file
+        Opens new text file
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -96,15 +77,22 @@ class TextEditorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Send(self, request, context):
-        """Sends message to recipient with Username
+    def SignInExisting(self, request, context):
+        """Signs in existing user and gets unread messages.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Listen(self, request, context):
-        """Response stream for client to receive messages from server
+    def AddUser(self, request, context):
+        """Signs in new user and gets unread messages.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Send(self, request, context):
+        """Sends message to recipient with Username
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -134,16 +122,6 @@ class TextEditorServicer(object):
 
 def add_TextEditorServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'SignInExisting': grpc.unary_unary_rpc_method_handler(
-                    servicer.SignInExisting,
-                    request_deserializer=texteditor__pb2.Username.FromString,
-                    response_serializer=texteditor__pb2.Welcome.SerializeToString,
-            ),
-            'AddUser': grpc.unary_unary_rpc_method_handler(
-                    servicer.AddUser,
-                    request_deserializer=texteditor__pb2.Username.FromString,
-                    response_serializer=texteditor__pb2.Welcome.SerializeToString,
-            ),
             'OpenNewFile': grpc.unary_unary_rpc_method_handler(
                     servicer.OpenNewFile,
                     request_deserializer=texteditor__pb2.Download.FromString,
@@ -154,14 +132,19 @@ def add_TextEditorServicer_to_server(servicer, server):
                     request_deserializer=texteditor__pb2.Download.FromString,
                     response_serializer=texteditor__pb2.FileResponse.SerializeToString,
             ),
+            'SignInExisting': grpc.unary_unary_rpc_method_handler(
+                    servicer.SignInExisting,
+                    request_deserializer=texteditor__pb2.Username.FromString,
+                    response_serializer=texteditor__pb2.Welcome.SerializeToString,
+            ),
+            'AddUser': grpc.unary_unary_rpc_method_handler(
+                    servicer.AddUser,
+                    request_deserializer=texteditor__pb2.Username.FromString,
+                    response_serializer=texteditor__pb2.Welcome.SerializeToString,
+            ),
             'Send': grpc.unary_unary_rpc_method_handler(
                     servicer.Send,
                     request_deserializer=texteditor__pb2.SendRequest.FromString,
-                    response_serializer=texteditor__pb2.Payload.SerializeToString,
-            ),
-            'Listen': grpc.unary_stream_rpc_method_handler(
-                    servicer.Listen,
-                    request_deserializer=texteditor__pb2.Username.FromString,
                     response_serializer=texteditor__pb2.Payload.SerializeToString,
             ),
             'List': grpc.unary_unary_rpc_method_handler(
@@ -189,40 +172,6 @@ def add_TextEditorServicer_to_server(servicer, server):
 class TextEditor(object):
     """Interface exported by the server.
     """
-
-    @staticmethod
-    def SignInExisting(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/chat.TextEditor/SignInExisting',
-            texteditor__pb2.Username.SerializeToString,
-            texteditor__pb2.Welcome.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def AddUser(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/chat.TextEditor/AddUser',
-            texteditor__pb2.Username.SerializeToString,
-            texteditor__pb2.Welcome.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def OpenNewFile(request,
@@ -259,6 +208,40 @@ class TextEditor(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
+    def SignInExisting(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/chat.TextEditor/SignInExisting',
+            texteditor__pb2.Username.SerializeToString,
+            texteditor__pb2.Welcome.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def AddUser(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/chat.TextEditor/AddUser',
+            texteditor__pb2.Username.SerializeToString,
+            texteditor__pb2.Welcome.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
     def Send(request,
             target,
             options=(),
@@ -271,23 +254,6 @@ class TextEditor(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/chat.TextEditor/Send',
             texteditor__pb2.SendRequest.SerializeToString,
-            texteditor__pb2.Payload.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def Listen(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/chat.TextEditor/Listen',
-            texteditor__pb2.Username.SerializeToString,
             texteditor__pb2.Payload.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

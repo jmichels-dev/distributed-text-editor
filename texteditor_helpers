@@ -1,8 +1,0 @@
-import server_grpc
-
-def check_filename(filename, namedict):
-    if filename not in namedict:
-        return 0
-    return 1
-
-

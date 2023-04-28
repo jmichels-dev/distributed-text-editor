@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package chat;
 
+// python -m grpc_tools.protoc --proto_path=./protos --python_out=. --grpc_python_out=. texteditor.proto
+
 // Interface exported by the server.
 service TextEditor {
     // A simple RPC.
@@ -10,8 +12,8 @@ service TextEditor {
     rpc OpenNewFile(Download) returns (FileResponse) {}
     // Opens existing text file
     rpc OpenExistingFile(Download) returns (FileResponse) {}
-    // Response stream for client to receive messages from server
-    rpc Listen(Filename) returns (stream Update) {}
+    // // Response stream for client to receive messages from server
+    // rpc Listen(Filename) returns (stream Update) {}
 
 
     // Signs in existing user and gets unread messages.
@@ -46,9 +48,9 @@ message FileResponse {
     bytes content = 3;
 }
 
-message Update {
+// message Update {
     
-}
+// }
 
 // If errorFlag == 1, unreads is an error message. 
 // Else, unreads is a list of unread messages.

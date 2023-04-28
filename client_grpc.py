@@ -1,13 +1,19 @@
 import logging
 import sys
 from _thread import *
+import tkinter as tk
+from tkinter import scrolledtext
+from tkinter import filedialog
+import ctypes
 import time
 
 import grpc
 import texteditor_pb2
 import texteditor_pb2_grpc
 
-# import helpers_grpc
+import helpers
+
+filetypes = [("Text Files", "*.txt")]
 
 # Parse input from command line and do the correct action. Loops until logout or delete.
 def commandLoop(stub):
@@ -20,9 +26,13 @@ def commandLoop(stub):
             # Insert check if filename is valid here?
             break
         # Send sender username, recipient username, and message to the server & store confirmation response
-        senderResponse = stub.OpenNewFile(texteditor_pb2.Download(filename=new_filename))
-        print(senderResponse.msg)
-        print("Command:")
+        fileResponse = stub.OpenNewFile(texteditor_pb2.Download(filename=new_filename))
+        print(fileResponse.errorFlag)
+        if fileResponse.errorFlag:
+            print("Error: Filename already exists.")
+        else:
+            launchGUI(fileResponse.filename)
+
     # # User wants to list users
     # if command == 'L' or command == 'l':
     #     wildcard = input("Optional text wildcard: ")
@@ -41,6 +51,50 @@ def commandLoop(stub):
     #     time.sleep(0.2)
     #     return
     commandLoop(stub)
+
+def launchGUI(filename):
+    appName = "Distributed Text Editor"
+    
+    window = tk.Tk()
+    window.title(appName + " - " + filename)
+    window.geometry('500x400')
+    window.grid_columnconfigure(0, weight=1)
+
+    txt = scrolledtext.ScrolledText(window, height=999)
+    txt.grid(row=1,sticky=tk.N+tk.S+tk.E+tk.W)
+    #txt.bind("<KeyPress>", textchange(window, appName, ))
+
+    menu = tk.Menu(window)
+    fileDropdown = tk.Menu(menu, tearoff=False)
+    fileDropdown.add_command(label="Open", command=lambda: fileDropdownHandler("open", filename, window, appName, txt))
+    fileDropdown.add_separator()
+    fileDropdown.add_command(label="Save", command=lambda: fileDropdownHandler("save", filename, window, appName, txt))
+    fileDropdown.add_command(label="Save as", command=lambda: fileDropdownHandler("saveAs", filename, window, appName, txt))
+    menu.add_cascade(label="File", menu=fileDropdown)
+
+    window.config(menu=menu)
+
+    window.mainloop()
+
+
+def textchange(window, appName, event, filename):
+    window.title(appName + " -*" + filename)
+
+def fileDropdownHandler(action, filename, window, appName, txt):
+    if action == "open":
+        file = filedialog.askopenfilename(filetypes=filetypes)
+        window.title(appName + " - " + filename)
+        currentFilePath = file
+        with open(file, 'r') as f:
+            txt.delete(1.0, tk.END)
+            txt.insert(tk.INSERT,f.read())
+    elif action == "save" or action == "saveAs":
+        if currentFilePath == "New File" or action == "saveAs":
+            currentFilePath = filedialog.asksaveasfilename(filetypes=filetypes)
+        with open(currentFilePath, "w") as f:
+            f.write(txt.get("1.0", "end"))
+        window.title(appName + " - " + currentFilePath)
+        
 
 # Listens for messages from server's Listen response stream. Closes when user logs out or deletes acct.
 def listen_thread(username, stub, responseStream):

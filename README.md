@@ -11,6 +11,10 @@ clients who are currently editing the same file.
 After the client is finished, they will log out, and the local copy
 of the file will be deleted.
 
+How to get POS tkinter to work on POS macOS: 
+
+https://stackoverflow.com/questions/58400564/tcl-tk-tkinter-not-installing-via-homebrew-pyenv-on-macos-mojave
+
 
 What needs to get done:
 
