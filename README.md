@@ -19,7 +19,7 @@ https://stackoverflow.com/questions/58400564/tcl-tk-tkinter-not-installing-via-h
 What needs to get done:
 
 1) Get working for single client (wip)
-    i. Open new .txt file (wip)
+    i. Open new .txt file (done)
     ii. Open existing .txt file
     iii. List all files on server
     iv. Exit file, saving copy to server
