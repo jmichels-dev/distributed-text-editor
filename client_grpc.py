@@ -18,7 +18,7 @@ filetypes = [("Text Files", "*.txt")]
 # Parse input from command line and do the correct action. Loops until logout or delete.
 def commandLoop(stub):
     command = sys.stdin.readline().strip()
-    # User wants to send a message
+    # User wants to open new .txt file
     if command == 'O' or command == 'o':
         new_filename = ""
         while True:
@@ -32,6 +32,23 @@ def commandLoop(stub):
             print("Error: Filename already exists.")
         else:
             launchGUI(fileResponse.filename)
+
+    # User wants to open existing.txt file
+    if command == 'E' or command == 'e':
+        existing_filename = ""
+        while True:
+            existing_filename = input("Enter existing file name. (omit file type) \n Filename: ")
+            # Insert check if filename is valid here?
+            break
+        # Send sender username, recipient username, and message to the server & store confirmation response
+        fileResponse = stub.OpenExistingFile(texteditor_pb2.Download(filename=existing_filename))
+        # if fileResponse.errorFlag:
+        #     print("Error: Filename already exists.")
+        # else:
+        with open(existing_filename + ".txt", "wb") as f:
+            for response in fileResponse:
+                f.write(response.contents)
+        launchGUI(fileResponse.filename)
 
     # # User wants to list users
     # if command == 'L' or command == 'l':
@@ -76,7 +93,7 @@ def launchGUI(filename):
 
     window.mainloop()
 
-
+# prolly will get rid of this
 def textchange(window, appName, event, filename):
     window.title(appName + " -*" + filename)
 

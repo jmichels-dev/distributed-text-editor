@@ -11,7 +11,7 @@ service TextEditor {
     // Opens new text file
     rpc OpenNewFile(Download) returns (FileResponse) {}
     // Opens existing text file
-    rpc OpenExistingFile(Download) returns (FileResponse) {}
+    rpc OpenExistingFile(Download) returns (stream Data) {}
     // // Response stream for client to receive messages from server
     // rpc Listen(Filename) returns (stream Update) {}
 
@@ -45,7 +45,10 @@ message Download {
 message FileResponse {
     bool errorFlag = 1;
     string filename = 2;
-    bytes content = 3;
+}
+
+message Data {
+    bytes data = 1;
 }
 
 // message Update {

@@ -14,13 +14,27 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
         # set of (unique) filenames
         self.filenames = set()
     
-    def OpenNewFile(self, download, context):
-        print(download.filename)
+    def openNewFile(self, download, context):
         if helpers.filenameExists(download.filename, self.filenames):
-            return texteditor_pb2.FileResponse(errorFlag=True, filename=download.filename, content=None)
+            return texteditor_pb2.FileResponse(errorFlag=True, filename=download.filename)
         self.filenames.add(download.filename)
         open("./usertextfiles/" + download.filename + ".txt", "w")
-        return texteditor_pb2.FileResponse(errorFlag=False, filename=download.filename, content=None)
+        return texteditor_pb2.FileResponse(errorFlag=False, filename=download.filename)
+    
+    def openExistingFile(self, download, context):
+        print(download.filename)
+        # return error if file does not exist
+        try:
+            with open("./usertextfiles/" + download.filename + ".txt", "rb") as f:
+                while True:
+                    chunk = f.read(4096)
+                    if not chunk:
+                        break
+                    yield texteditor_pb2.FileContents(contents=chunk)
+        except IOError:
+            context.set_code(grpc.StatusCode.NOT_FOUND)
+            context.set_details("File not found")
+            return
 
 
 #     def SignInExisting(self, username, context):

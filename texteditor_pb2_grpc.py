@@ -6,7 +6,9 @@ import texteditor_pb2 as texteditor__pb2
 
 
 class TextEditorStub(object):
-    """Interface exported by the server.
+    """python -m grpc_tools.protoc --proto_path=./protos --python_out=. --grpc_python_out=. texteditor.proto
+
+    Interface exported by the server.
     """
 
     def __init__(self, channel):
@@ -20,10 +22,10 @@ class TextEditorStub(object):
                 request_serializer=texteditor__pb2.Download.SerializeToString,
                 response_deserializer=texteditor__pb2.FileResponse.FromString,
                 )
-        self.OpenExistingFile = channel.unary_unary(
+        self.OpenExistingFile = channel.unary_stream(
                 '/chat.TextEditor/OpenExistingFile',
                 request_serializer=texteditor__pb2.Download.SerializeToString,
-                response_deserializer=texteditor__pb2.FileResponse.FromString,
+                response_deserializer=texteditor__pb2.Data.FromString,
                 )
         self.SignInExisting = channel.unary_unary(
                 '/chat.TextEditor/SignInExisting',
@@ -58,7 +60,9 @@ class TextEditorStub(object):
 
 
 class TextEditorServicer(object):
-    """Interface exported by the server.
+    """python -m grpc_tools.protoc --proto_path=./protos --python_out=. --grpc_python_out=. texteditor.proto
+
+    Interface exported by the server.
     """
 
     def OpenNewFile(self, request, context):
@@ -127,10 +131,10 @@ def add_TextEditorServicer_to_server(servicer, server):
                     request_deserializer=texteditor__pb2.Download.FromString,
                     response_serializer=texteditor__pb2.FileResponse.SerializeToString,
             ),
-            'OpenExistingFile': grpc.unary_unary_rpc_method_handler(
+            'OpenExistingFile': grpc.unary_stream_rpc_method_handler(
                     servicer.OpenExistingFile,
                     request_deserializer=texteditor__pb2.Download.FromString,
-                    response_serializer=texteditor__pb2.FileResponse.SerializeToString,
+                    response_serializer=texteditor__pb2.Data.SerializeToString,
             ),
             'SignInExisting': grpc.unary_unary_rpc_method_handler(
                     servicer.SignInExisting,
@@ -170,7 +174,9 @@ def add_TextEditorServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class TextEditor(object):
-    """Interface exported by the server.
+    """python -m grpc_tools.protoc --proto_path=./protos --python_out=. --grpc_python_out=. texteditor.proto
+
+    Interface exported by the server.
     """
 
     @staticmethod
@@ -201,9 +207,9 @@ class TextEditor(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/chat.TextEditor/OpenExistingFile',
+        return grpc.experimental.unary_stream(request, target, '/chat.TextEditor/OpenExistingFile',
             texteditor__pb2.Download.SerializeToString,
-            texteditor__pb2.FileResponse.FromString,
+            texteditor__pb2.Data.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
