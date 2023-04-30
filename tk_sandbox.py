@@ -3,49 +3,88 @@ from tkinter.filedialog import askopenfilename, asksaveasfilename
 
 """Starter code source: realpython.com/python-gui-tkinter/#building-a-text-editor-example-app"""
 
-def open_file():
-    """Open a file for editing."""
-    filepath = askopenfilename(
-        filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")]
-    )
-    if not filepath:
-        return
-    txt_edit.delete("1.0", tk.END)
-    with open(filepath, mode="r", encoding="utf-8") as input_file:
-        text = input_file.read()
-        txt_edit.insert(tk.END, text)
-    window.title(f"Distributed Collaborative Text Editor - {filepath}")
+class EditorGUI():
+    def __init__(self):
+        """Run text editor GUI and save key attributes"""
+        self.window = tk.Tk()
+        self.window.title("Distributed Collaborative Text Editor - New File")
+        self.title = "Distributed Collaborative Text Editor - New File"
+        self.new_file_flag = True
+        self.window.rowconfigure(0, minsize=800, weight=1)
+        self.window.columnconfigure(1, minsize=800, weight=1)
+        
+        self.txt_edit = tk.Text(self.window)
+        frm_buttons = tk.Frame(self.window, relief=tk.RAISED, bd=2)
+        btn_open = tk.Button(frm_buttons, text="Open", command=self.open_file)
+        btn_save = tk.Button(frm_buttons, text="Save", command=self.save)
+        btn_saveas = tk.Button(frm_buttons, text="Save As...", command=self.save_as)
+        btn_quit = tk.Button(frm_buttons, text="Quit", command=self.window.destroy)
 
-def save_file():
-    """Save the current file as a new file."""
-    filepath = asksaveasfilename(
-        defaultextension=".txt",
-        filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")],
-    )
-    if not filepath:
-        return
-    with open(filepath, mode="w", encoding="utf-8") as output_file:
-        text = txt_edit.get("1.0", tk.END)
-        output_file.write(text)
-    window.title(f"Simple Text Editor - {filepath}")
+        btn_open.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
+        btn_save.grid(row=1, column=0, sticky="ew", padx=5, pady=5)
+        btn_saveas.grid(row=2, column=0, sticky="ew", padx=5, pady=5)
+        btn_quit.grid(row=3, column=0, sticky="ew", padx=5, pady=5)
 
-window = tk.Tk()
-window.title("Distributed Collaborative Text Editor - New File")
+        frm_buttons.grid(row=0, column=0, sticky="ns")
+        self.txt_edit.grid(row=0, column=1, sticky="nsew")
 
-window.rowconfigure(0, minsize=800, weight=1)
-window.columnconfigure(1, minsize=800, weight=1)
+        self.window.mainloop()
 
-txt_edit = tk.Text(window)
-frm_buttons = tk.Frame(window, relief=tk.RAISED, bd=2)
-btn_open = tk.Button(frm_buttons, text="Open", command=open_file)
-btn_save = tk.Button(frm_buttons, text="Save As...", command=save_file)
-btn_quit = tk.Button(frm_buttons, text="Quit", command=window.destroy)
+    def open_file(self):
+        """Open a file for editing."""
+        filepath = askopenfilename(
+            filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")],
+            initialdir="./usertextfiles"
+        )
+        if not filepath:
+            return
+        self.txt_edit.delete("1.0", tk.END)
+        with open(filepath, mode="r", encoding="utf-8") as input_file:
+            text = input_file.read()
+            self.txt_edit.insert(tk.END, text)
+        self.window.title(f"Distributed Collaborative Text Editor - {filepath}")
+        self.title = f"Distributed Collaborative Text Editor - {filepath}"
 
-btn_open.grid(row=0, column=0, sticky="ew", padx=5, pady=5)
-btn_save.grid(row=1, column=0, sticky="ew", padx=5, pady=5)
-btn_quit.grid(row=2, column=0, sticky="ew", padx=5, pady=5)
+    def save(self):
+        """If new file, save as, otherwise save with existing title"""
+        if self.new_file_flag:
+            self.save_as()
+            return
+        else:
+            title_arr = self.title.split(" - ")
+            filepath = title_arr[1]
+            if not filepath:
+                return
+            with open(filepath, mode="w", encoding="utf-8") as output_file:
+                text = self.txt_edit.get("1.0", tk.END)
+                output_file.write(text)
+            self.window.title(f"Distributed Collaborative Text Editor - {filepath}")
+            self.title = f"Distributed Collaborative Text Editor - {filepath}"
 
-frm_buttons.grid(row=0, column=0, sticky="ns")
-txt_edit.grid(row=0, column=1, sticky="nsew")
-
-window.mainloop()
+    def save_as(self):
+        """Save the current file as a new file"""
+        if self.new_file_flag:
+            filepath = asksaveasfilename(
+                defaultextension=".txt",
+                filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")],
+                initialdir="./usertextfiles"
+            )
+        # If existing file, autofill the last title
+        else:
+            title_arr = self.title.split(" - ")
+            filepath = title_arr[1]
+            filename = filepath.split("/")[-1]
+            filepath = asksaveasfilename(
+                defaultextension=".txt",
+                filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")],
+                initialfile=filename,
+                initialdir="./usertextfiles"
+            )
+        if not filepath:
+            return
+        with open(filepath, mode="w", encoding="utf-8") as output_file:
+            text = self.txt_edit.get("1.0", tk.END)
+            output_file.write(text)
+        self.window.title(f"Distributed Collaborative Text Editor - {filepath}")
+        self.title = f"Distributed Collaborative Text Editor - {filepath}"
+        self.new_file_flag = False

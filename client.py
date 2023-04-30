@@ -3,6 +3,7 @@ import sys
 from _thread import *
 from tkinter import *
 from tkinter import ttk
+from tk_sandbox import EditorGUI
 import ctypes
 import time
 
@@ -129,16 +130,9 @@ def run():
     with grpc.insecure_channel('{}:{}'.format(ip, port)) as channel:
         stub = texteditor_pb2_grpc.TextEditorStub(channel)
         print("Congratulations! You have connected to the collaborative file editing server.\n")
+        gui = EditorGUI()
 
         while True:
-            # Notify the user of possible functions
-            print("Use the following commands to interact with the app: \n")
-            print(" -----------------------------------------------")
-            print("|L: List all files that exist on this server.   |")
-            print("|O: Open a new file.                            |")
-            print("|E: Open an existing file.                      |")
-            print(" ----------------------------------------------- \n")
-            print("Command: ")
             # Establish response stream to receive messages from server.
             # responseStream is a generator of texteditor_pb2.??? objects.
             # Wait for input from command line
