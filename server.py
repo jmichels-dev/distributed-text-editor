@@ -14,6 +14,11 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
     def __init__(self):
         # set of (unique) filenames
         self.filenames = set()
+        for filename in os.listdir("./usertextfiles/"):
+            f = os.path.join("./usertextfiles/", filename)
+            # checking if it is a file
+            if os.path.isfile(f):
+                self.filenames.add(filename)
 
     def SaveToServer(self, download, context):
         """Send saved file to primary server and overwrite any existing file with same name"""
@@ -91,9 +96,6 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             if this_backup_id.backup_id in self.newOps and len(self.newOps[this_backup_id.backup_id]) > 0:
                 yield chat_pb2.Operation(opLst=self.newOps[this_backup_id.backup_id].pop(0))
 
-    ## Non-RPC server-side snapshots
-
-    
     ## Non-RPC server-side snapshots
     def Snapshot(self):
         with open('snapshot_' + str(server_id) + '.csv', 'w', newline = '') as testfile:
