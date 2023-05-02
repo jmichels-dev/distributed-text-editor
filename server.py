@@ -52,11 +52,6 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             context.set_details("File not found")
             return texteditor_pb2.FileResponse(errorFlag=True, filename=file_response.filename)
 
-    def BackupEdits(self, this_backup_id, context):
-        while True:
-            if this_backup_id.backup_id in self.newOps and len(self.newOps[this_backup_id.backup_id]) > 0:
-                yield chat_pb2.Operation(opLst=self.newOps[this_backup_id.backup_id].pop(0))
-
     def OpenExistingFile(self, download, context):
         print(download.filename)
         # return error if file does not exist
@@ -98,6 +93,11 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
                 self.newOps.pop(this_backup_id)
                 print("Remaining backup servers:", self.backup_servers)
                 break
+
+    def BackupEdits(self, this_backup_id, context):
+        while True:
+            if this_backup_id.backup_id in self.newEdits and len(self.newEdits[this_backup_id.backup_id]) > 0:
+                yield texteditor_pb2.DownloadLst(dLst=self.newEdits[this_backup_id.backup_id].pop(0))
 
     ## Non-RPC server-side snapshots
     def Snapshot(self):

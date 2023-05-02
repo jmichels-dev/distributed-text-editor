@@ -10,6 +10,31 @@ import constants
 import primary
 import csv
 
+class BackupTextEditorServicer():
+    def __init__(self, id, primary_id, stub):
+        self.id = id
+        self.primary_id = primary_id
+        self.stub = stub
+        # set of (unique) filenames
+        self.filenames = set()
+        # Save current filenames
+        for filename in os.listdir("./usertextfiles/"):
+            f = os.path.join("./usertextfiles/", filename)
+            # checking if it is a file
+            if os.path.isfile(f):
+                self.filenames.add(filename)
+
+        # Establish response stream to receive edited files from the primary
+        edited_downloads_stream = stub.BackupEdits(chat_pb2.KeepAliveRequest(backup_id=backup_id))
+        # Concurrently update state in a thread
+        start_new_thread(download_edits, (edited_downloads_stream, backup_id))
+
+        # Establish bidirectional stream to send and receive keep-alive messages from primary server.
+        # requestStream and responseStream are generators of chat_pb2.KeepAlive objects.
+        requestStream = send_backup_heartbeats(backup_id)
+        responseStream = stub.Heartbeats(requestStream)
+        keepalive_listen(responseStream, backup_id)
+
 # Listens for messages from primary server's KeepAlive response stream
 def keepalive_listen(responseStream, this_backup_id):
     primary_id = -1
@@ -17,9 +42,8 @@ def keepalive_listen(responseStream, this_backup_id):
     while True:
         try:
             responseKeepAlive = next(responseStream)
-            primary_id = responseKeepAlive.primary_id
             backup_ids = responseKeepAlive.backup_ids
-            print("Received heartbeat from primary at server_id", primary_id)
+            print("Received heartbeat from primary at server_id", responseKeepAlive.primary_id)
             time.sleep(constants.HEARTBEAT_INTERVAL)
         except Exception:
             print("Error in heartbeat from primary.")
@@ -31,7 +55,7 @@ def keepalive_listen(responseStream, this_backup_id):
                     primary.serve(new_primary_id)
                     sys.exit()
                 else:
-                    run(this_backup_id, new_primary_id)
+                    serve(this_backup_id, new_primary_id)
             else:
                 print("backup_ids empty")
             return
@@ -77,10 +101,10 @@ def loadCommitLog(filename, clientDict):
                 clientDict.pop(row[1])
     print("commit log fully loaded\n")
 
-# writes operations to the backup commit log
-def log_ops(opResponseStream, server_id):
+def download_edits(edited_downloads_stream, backup_id):
+    """Download edited files from the primary to this backup"""
     while True:
-        nextOp = next(opResponseStream)
+        nextFile = next(edited_downloads_stream)
         with open('commit_log_' + str(server_id) + '.csv', 'a', newline = '') as commitlog:
             rowwriter = csv.writer(commitlog, delimiter=" ", quotechar="|", quoting=csv.QUOTE_MINIMAL)
             rowwriter.writerow(nextOp.opLst)
@@ -98,33 +122,14 @@ def snapshotThread(backup_clientDict, server_id):
         else:
             continue
 
-def run(backup_id, primary_id):
-    # ip and port that this backup will use if it becomes primary
-    backup_ip = constants.IP_PORT_DICT[backup_id][0]
-    backup_port = constants.IP_PORT_DICT[backup_id][1]
-
+def serve(backup_id, primary_id):
     # ip and port of the current primary
     primary_ip = constants.IP_PORT_DICT[primary_id][0]
     primary_port = constants.IP_PORT_DICT[primary_id][1]
 
     with grpc.insecure_channel('{}:{}'.format(primary_ip, primary_port)) as channel:
-        stub = chat_pb2_grpc.TextEditoryStub(channel)
-
-        # Establish response stream to receive operations from the primary
-        opResponseStream = stub.BackupOps(chat_pb2.KeepAliveRequest(backup_id=server_id))
-        # Concurrently update state in a thread
-        backup_clientDict = {}
-        start_new_thread(log_ops, (opResponseStream, server_id))
-        start_new_thread(snapshotThread, (backup_clientDict, server_id))
-
-
-        # Establish bidirectional stream to send and receive keep-alive messages from primary server.
-        # requestStream and responseStream are generators of chat_pb2.KeepAlive objects.
-        while True:
-            requestStream = send_backup_heartbeats(server_id)
-            responseStream = stub.Heartbeats(requestStream)
-            keepalive_listen(responseStream, server_id)
-            time.sleep(constants.HEARTBEAT_INTERVAL)
+        stub = chat_pb2_grpc.TextEditorStub(channel)
+        BackupTextEditorServicer(backup_id, primary_id, stub)
             
 if __name__ == '__main__':
     # Checks for correct number of args
@@ -133,4 +138,4 @@ if __name__ == '__main__':
         exit()
     backup_id = int(sys.argv[1])
     primary_id = int(sys.argv[2])
-    run(backup_id, primary_id)
+    serve(backup_id, primary_id)

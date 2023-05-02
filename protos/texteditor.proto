@@ -13,7 +13,7 @@ service TextEditor {
     // Deletes file on primary server
     rpc DeleteFromServer(FileResponse) returns (FileResponse) {}
     // Send new edits from primary to backups
-    rpc BackupEdits(KeepAliveRequest) returns (stream Download) {}
+    rpc BackupEdits(KeepAliveRequest) returns (stream DownloadLst) {}
     // Opens new text file
     rpc OpenNewFile(Download) returns (FileResponse) {}
     // Opens existing text file
@@ -26,6 +26,10 @@ message Download {
     string filename = 1;
     // bool newFileFlag = 2;
     bytes contents = 3;
+}
+
+message DownloadLst {
+    repeated Download dLst = 1;
 }
 
 message FileResponse {

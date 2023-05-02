@@ -30,9 +30,8 @@ def run():
         stub = texteditor_pb2_grpc.TextEditorStub(channel)
         print("Congratulations! You have connected to the collaborative file editing server.\n")
         
-        editor = EditorGUI(stub)
+        EditorGUI(stub)
 
-        print("is this blocking?")
         # while True:
             # Establish response stream to receive messages from server.
             # responseStream is a generator of texteditor_pb2.??? objects.
