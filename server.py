@@ -11,7 +11,8 @@ import helpers
 
 class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
 
-    def __init__(self):
+    def __init__(self, id):
+        self.id = id
         # set of (unique) filenames
         self.filenames = set()
         # Save current filenames
@@ -20,8 +21,10 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             # checking if it is a file
             if os.path.isfile(f):
                 self.filenames.add(filename)
-        # Commit file edits that have not yet been sent to backups. Key is id of backup, value is list of filenames to be sent.
-        self.newEdits = {}
+        # Commit file edits that have not yet been sent to backups. Key is id of backup, value is list of filenames and contents to be sent.
+        self.backup_edits = {}
+        self.backup_servers = set()
+
 
     def SaveToServer(self, download, context):
         """Send saved file to primary server and overwrite any existing file with same name"""
@@ -31,6 +34,8 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             with open("./usertextfiles/" + download.filename, "wb") as f:
                 while True:
                     f.write(download.contents)
+                    for key in self.backup_edits:
+                        backup_edits[key].append([download.filename, download.contents])
                     return texteditor_pb2.FileResponse(errorFlag=False, filename=download.filename)
         except:
             context.set_code(grpc.StatusCode.NOT_FOUND)
@@ -80,39 +85,23 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
                 this_backup_id = requestKeepAlive.backup_id
                 print("Received heartbeat from backup at server_id", this_backup_id)
                 self.backup_servers.add(this_backup_id)
-                if this_backup_id not in self.newOps:
-                    self.newOps[this_backup_id] = []
-                print("Operation repl queue:", self.newOps)
-
+                if this_backup_id not in self.backup_edits:
+                    self.backup_edits[this_backup_id] = []
                 # Send heartbeat to backup
                 yield chat_pb2.KeepAliveResponse(primary_id=self.server_id, backup_ids=list(self.backup_servers))
                 time.sleep(constants.HEARTBEAT_INTERVAL)
             except Exception:
                 print("Error in heartbeat from backup.")
                 self.backup_servers.remove(this_backup_id)
-                self.newOps.pop(this_backup_id)
+                self.backup_edits.pop(this_backup_id)
                 print("Remaining backup servers:", self.backup_servers)
                 break
 
     def BackupEdits(self, this_backup_id, context):
+        """Send edited files from primary to backups"""
         while True:
             if this_backup_id.backup_id in self.newEdits and len(self.newEdits[this_backup_id.backup_id]) > 0:
                 yield texteditor_pb2.DownloadLst(dLst=self.newEdits[this_backup_id.backup_id].pop(0))
-
-    ## Non-RPC server-side snapshots
-    def Snapshot(self):
-        with open('snapshot_' + str(server_id) + '.csv', 'w', newline = '') as testfile:
-            rowwriter = csv.writer(testfile, delimiter=" ", quotechar="|", quoting=csv.QUOTE_MINIMAL)
-            for key in self.clientDict:
-                rowwriter.writerow([key] + self.clientDict[key])
-    
-    def OpenNewFile(self, download, context):
-        if helpers.filenameExists(download.filename, self.filenames):
-            return texteditor_pb2.FileResponse(errorFlag=True, filename=download.filename)
-        self.filenames.add(download.filename)
-        open("./usertextfiles/" + download.filename + ".txt", "w")
-        return texteditor_pb2.FileResponse(errorFlag=False, filename=download.filename)
-
 
 #     def SignInExisting(self, username, context):
 #         eFlag, msg = helpers_grpc.signInExisting(username.name, self.clientDict)
@@ -165,4 +154,8 @@ def serve():
 
 if __name__ == '__main__':
     logging.basicConfig()
-    serve()
+    if len(sys.argv) != 2:
+        print("Correct usage: script, server_id")
+        exit()
+    server_id = int(sys.argv[1])
+    serve(server_id)

@@ -18,8 +18,9 @@ service TextEditor {
     rpc OpenNewFile(Download) returns (FileResponse) {}
     // Opens existing text file
     rpc OpenExistingFile(Download) returns (stream Data) {}
-    // // Response stream for client to receive messages from server
-    // rpc Listen(Filename) returns (stream Update) {}
+    // Periodic messages from primary server to each backup server to 
+    // determine if primary server or backup servers have failed
+    rpc Heartbeats(stream KeepAliveRequest) returns (stream KeepAliveResponse) {}
 }
 
 message Download {
@@ -44,6 +45,11 @@ message Data {
 // Periodic heartbeat requests and responses between primary and backups
 message KeepAliveRequest {
     int32 backup_id = 1;
+}
+
+message KeepAliveResponse {
+    int32 primary_id = 1;
+    repeated int32 backup_ids = 2;
 }
 
 message Payload {
