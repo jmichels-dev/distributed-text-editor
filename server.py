@@ -14,11 +14,14 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
     def __init__(self):
         # set of (unique) filenames
         self.filenames = set()
+        # Save current filenames
         for filename in os.listdir("./usertextfiles/"):
             f = os.path.join("./usertextfiles/", filename)
             # checking if it is a file
             if os.path.isfile(f):
                 self.filenames.add(filename)
+        # Commit file edits that have not yet been sent to backups. Key is id of backup, value is list of filenames to be sent.
+        self.newEdits = {}
 
     def SaveToServer(self, download, context):
         """Send saved file to primary server and overwrite any existing file with same name"""
@@ -48,6 +51,11 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             context.set_code(grpc.StatusCode.NOT_FOUND)
             context.set_details("File not found")
             return texteditor_pb2.FileResponse(errorFlag=True, filename=file_response.filename)
+
+    def BackupEdits(self, this_backup_id, context):
+        while True:
+            if this_backup_id.backup_id in self.newOps and len(self.newOps[this_backup_id.backup_id]) > 0:
+                yield chat_pb2.Operation(opLst=self.newOps[this_backup_id.backup_id].pop(0))
 
     def OpenExistingFile(self, download, context):
         print(download.filename)
@@ -90,11 +98,6 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
                 self.newOps.pop(this_backup_id)
                 print("Remaining backup servers:", self.backup_servers)
                 break
-
-    def BackupOps(self, this_backup_id, context):
-        while True:
-            if this_backup_id.backup_id in self.newOps and len(self.newOps[this_backup_id.backup_id]) > 0:
-                yield chat_pb2.Operation(opLst=self.newOps[this_backup_id.backup_id].pop(0))
 
     ## Non-RPC server-side snapshots
     def Snapshot(self):
