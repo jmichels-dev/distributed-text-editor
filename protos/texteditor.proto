@@ -8,6 +8,10 @@ package chat;
 service TextEditor {
     // A simple RPC.
     //
+    // Saves file from client to primary server
+    rpc SaveToServer(Download) returns (FileResponse) {}
+    // Deletes file on primary server
+    rpc DeleteFromServer(FileResponse) returns (FileResponse) {}
     // Opens new text file
     rpc OpenNewFile(Download) returns (FileResponse) {}
     // Opens existing text file
@@ -40,6 +44,8 @@ message Welcome {
 
 message Download {
     string filename = 1;
+    // bool newFileFlag = 2;
+    bytes contents = 3;
 }
 
 message FileResponse {

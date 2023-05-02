@@ -17,6 +17,16 @@ class TextEditorStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.SaveToServer = channel.unary_unary(
+                '/chat.TextEditor/SaveToServer',
+                request_serializer=texteditor__pb2.Download.SerializeToString,
+                response_deserializer=texteditor__pb2.FileResponse.FromString,
+                )
+        self.DeleteFromServer = channel.unary_unary(
+                '/chat.TextEditor/DeleteFromServer',
+                request_serializer=texteditor__pb2.FileResponse.SerializeToString,
+                response_deserializer=texteditor__pb2.FileResponse.FromString,
+                )
         self.OpenNewFile = channel.unary_unary(
                 '/chat.TextEditor/OpenNewFile',
                 request_serializer=texteditor__pb2.Download.SerializeToString,
@@ -65,10 +75,24 @@ class TextEditorServicer(object):
     Interface exported by the server.
     """
 
-    def OpenNewFile(self, request, context):
+    def SaveToServer(self, request, context):
         """A simple RPC.
 
-        Opens new text file
+        Saves file from client to primary server
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeleteFromServer(self, request, context):
+        """Deletes file on primary server
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def OpenNewFile(self, request, context):
+        """Opens new text file
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -126,6 +150,16 @@ class TextEditorServicer(object):
 
 def add_TextEditorServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'SaveToServer': grpc.unary_unary_rpc_method_handler(
+                    servicer.SaveToServer,
+                    request_deserializer=texteditor__pb2.Download.FromString,
+                    response_serializer=texteditor__pb2.FileResponse.SerializeToString,
+            ),
+            'DeleteFromServer': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteFromServer,
+                    request_deserializer=texteditor__pb2.FileResponse.FromString,
+                    response_serializer=texteditor__pb2.FileResponse.SerializeToString,
+            ),
             'OpenNewFile': grpc.unary_unary_rpc_method_handler(
                     servicer.OpenNewFile,
                     request_deserializer=texteditor__pb2.Download.FromString,
@@ -178,6 +212,40 @@ class TextEditor(object):
 
     Interface exported by the server.
     """
+
+    @staticmethod
+    def SaveToServer(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/chat.TextEditor/SaveToServer',
+            texteditor__pb2.Download.SerializeToString,
+            texteditor__pb2.FileResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def DeleteFromServer(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/chat.TextEditor/DeleteFromServer',
+            texteditor__pb2.FileResponse.SerializeToString,
+            texteditor__pb2.FileResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def OpenNewFile(request,

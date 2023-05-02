@@ -11,10 +11,12 @@ class Data(_message.Message):
     def __init__(self, data: _Optional[bytes] = ...) -> None: ...
 
 class Download(_message.Message):
-    __slots__ = ["filename"]
+    __slots__ = ["contents", "filename"]
+    CONTENTS_FIELD_NUMBER: _ClassVar[int]
     FILENAME_FIELD_NUMBER: _ClassVar[int]
+    contents: bytes
     filename: str
-    def __init__(self, filename: _Optional[str] = ...) -> None: ...
+    def __init__(self, filename: _Optional[str] = ..., contents: _Optional[bytes] = ...) -> None: ...
 
 class FileResponse(_message.Message):
     __slots__ = ["errorFlag", "filename"]
