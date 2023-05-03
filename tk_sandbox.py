@@ -146,7 +146,7 @@ class EditorGUI():
         self.title = f"Distributed Collaborative Text Editor - {filepath}"
         self.new_file_flag = False
         self.btn_delete.config(state="normal")
-        if download_response.errorFlag: 
+        if download_response.errorFlag:
             messagebox.showinfo("File Save Error", "Error saving " + download_response.filename + ".txt")
 
 

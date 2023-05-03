@@ -1,18 +1,20 @@
 from concurrent import futures
 import logging
 import os
+import sys
+import time
 
 import grpc
-import sys
 import texteditor_pb2
 import texteditor_pb2_grpc
 import helpers
+import constants
 
 
 class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
 
-    def __init__(self, id):
-        self.id = id
+    def __init__(self, server_id):
+        self.server_id = server_id
         # set of (unique) filenames
         self.filenames = set()
         # Save current filenames
@@ -32,11 +34,10 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             self.filenames.add(download.filename)
         try:
             with open("./usertextfiles/" + download.filename, "wb") as f:
-                while True:
-                    f.write(download.contents)
-                    for key in self.backup_edits:
-                        backup_edits[key].append([download.filename, download.contents])
-                    return texteditor_pb2.FileResponse(errorFlag=False, filename=download.filename)
+                f.write(download.contents)
+                for key in self.backup_edits:
+                    self.backup_edits[key].append(download)
+                return texteditor_pb2.FileResponse(errorFlag=False, filename=download.filename)
         except:
             context.set_code(grpc.StatusCode.NOT_FOUND)
             context.set_details("File not found")
@@ -57,25 +58,10 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             context.set_details("File not found")
             return texteditor_pb2.FileResponse(errorFlag=True, filename=file_response.filename)
 
-    def OpenExistingFile(self, download, context):
-        print(download.filename)
-        # return error if file does not exist
-        try:
-            with open("./usertextfiles/" + download.filename + ".txt", "rb") as f:
-                while True:
-                    chunk = f.read(4096)
-                    if not chunk:
-                        break
-                    yield texteditor_pb2.FileContents(contents=chunk)
-        except IOError:
-            context.set_code(grpc.StatusCode.NOT_FOUND)
-            context.set_details("File not found")
-            return
-
     ## Replication RPCs
     def Heartbeats(self, backupStream, context):
         """Send latest state from primary to backups as a keepalive message"""
-        print("Before new connection, existing backup servers:", self.backup_servers)
+        # print("Before new connection, existing backup servers:", self.backup_servers)
         this_backup_id = -1
 
         while True:
@@ -88,7 +74,7 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
                 if this_backup_id not in self.backup_edits:
                     self.backup_edits[this_backup_id] = []
                 # Send heartbeat to backup
-                yield chat_pb2.KeepAliveResponse(primary_id=self.server_id, backup_ids=list(self.backup_servers))
+                yield texteditor_pb2.KeepAliveResponse(primary_id=self.server_id, backup_ids=list(self.backup_servers))
                 time.sleep(constants.HEARTBEAT_INTERVAL)
             except Exception:
                 print("Error in heartbeat from backup.")
@@ -100,8 +86,8 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
     def BackupEdits(self, this_backup_id, context):
         """Send edited files from primary to backups"""
         while True:
-            if this_backup_id.backup_id in self.newEdits and len(self.newEdits[this_backup_id.backup_id]) > 0:
-                yield texteditor_pb2.DownloadLst(dLst=self.newEdits[this_backup_id.backup_id].pop(0))
+            if this_backup_id.backup_id in self.backup_edits and len(self.backup_edits[this_backup_id.backup_id]) > 0:
+                yield self.backup_edits[this_backup_id.backup_id].pop(0)
 
 #     def SignInExisting(self, username, context):
 #         eFlag, msg = helpers_grpc.signInExisting(username.name, self.clientDict)
@@ -140,12 +126,11 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
 #         return texteditor_pb2.Payload(msg="Goodbye!\n")
 
 
-def serve():
-    # ip = '10.250.226.222'
-    ip = '127.0.0.1'
-    port = '8080'
+def serve(server_id):
+    ip = constants.IP_PORT_DICT[server_id][0]
+    port = constants.IP_PORT_DICT[server_id][1]
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    texteditor_pb2_grpc.add_TextEditorServicer_to_server(TextEditorServicer(), server)
+    texteditor_pb2_grpc.add_TextEditorServicer_to_server(TextEditorServicer(server_id), server)
     server.add_insecure_port(f"{ip}:{port}")
     server.start()
     print("Server started, listening on " + port)

@@ -10,7 +10,7 @@ import time
 import grpc
 import texteditor_pb2
 import texteditor_pb2_grpc
-
+import constants
 import helpers        
 
 # Listens for messages from server's Listen response stream. Closes when user logs out or deletes acct.
@@ -22,11 +22,11 @@ def listen_thread(username, stub, responseStream):
         except:
             return
 
-def run():
-    # ip = '10.250.226.222'
-    ip = '127.0.0.1'
-    port = '8080'
-    with grpc.insecure_channel('{}:{}'.format(ip, port)) as channel:
+def run(server_id):
+    # ip and port of the current primary
+    primary_ip = constants.IP_PORT_DICT[server_id][0]
+    primary_port = constants.IP_PORT_DICT[server_id][1]
+    with grpc.insecure_channel('{}:{}'.format(primary_ip, primary_port)) as channel:
         stub = texteditor_pb2_grpc.TextEditorStub(channel)
         print("Congratulations! You have connected to the collaborative file editing server.\n")
         
@@ -40,4 +40,9 @@ def run():
 
 if __name__ == '__main__':
     logging.basicConfig()
-    run()
+    # Checks for correct number of args
+    if len(sys.argv) != 2:
+        print("Correct usage: script, primary_server_id")
+        exit()
+    server_id = int(sys.argv[1])
+    run(server_id)
