@@ -40,20 +40,19 @@ def listen_thread(stub, responseStream):
             response = next(responseStream)
             print(response.filename)
             with open("./usertextfiles/" + response.filename, "wb") as f:
-                while True:
-                    f.write(response.contents)
+                f.write(response.contents)
         except:
             return
 
 # Listens for deletes from server
 def delete_thread(stub, deleteStream):
     while True:
-        try:
-            response = next(deleteStream)
-            # print(response.filename)
-            os.remove("./usertextfiles/" + response.filename)
-        except:
-            print("Error deleting", response.filename)
+        # try:
+        response = next(deleteStream)
+        # print(response.filename)
+        os.remove("./usertextfiles/" + response.filename)
+        # except:
+        #     print("Error deleting", response.filename)
 
 
 def run(server_id):

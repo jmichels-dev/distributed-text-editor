@@ -106,10 +106,8 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             # If any files need to be updated
             if len(self.clientDict[username.name]) > 0:
                 contents = ""
-                with open("./usertextfiles/" + self.clientDict[username.name][0], "r") as f:
-                    while f.readline() != "":
-                        contents += f.readline()
-                contents = contents.encode()
+                with open("./usertextfiles/" + self.clientDict[username.name][0], "rb") as f:
+                    contents = f.read()
                 # Yield first file update
                 yield texteditor_pb2.Download(filename=self.clientDict[username.name].pop(0), contents=contents)
             # # Stop stream if user logs out
