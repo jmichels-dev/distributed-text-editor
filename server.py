@@ -107,7 +107,8 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             if len(self.clientDict[username.name]) > 0:
                 contents = ""
                 with open("./usertextfiles/" + self.clientDict[username.name][0], "r") as f:
-                    contents = f.read()
+                    while f.readline() != "":
+                        contents += f.readline()
                 contents = contents.encode()
                 # Yield first file update
                 yield texteditor_pb2.Download(filename=self.clientDict[username.name].pop(0), contents=contents)
