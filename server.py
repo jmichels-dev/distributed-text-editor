@@ -40,7 +40,7 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
                 f.write(download.contents)
                 for key in self.backup_edits:
                     self.backup_edits[key].append(download)
-                helpers.broadcastUpdate(download.filename, self.clientDict, self.username)
+                helpers.broadcastUpdate(download.filename, self.clientDict, download.user)
                 return texteditor_pb2.FileResponse(errorFlag=False, filename=download.filename)
         except:
             context.set_code(grpc.StatusCode.NOT_FOUND)
