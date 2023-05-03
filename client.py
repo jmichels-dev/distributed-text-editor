@@ -7,6 +7,7 @@ from tk_sandbox import EditorGUI
 import ctypes
 import time
 import threading
+import os
 
 import grpc
 import texteditor_pb2
@@ -44,6 +45,17 @@ def listen_thread(stub, responseStream):
         except:
             return
 
+# Listens for deletes from server
+def delete_thread(stub, deleteStream):
+    while True:
+        try:
+            response = next(deleteStream)
+            # print(response.filename)
+            os.remove("./usertextfiles/" + response.filename)
+        except:
+            print("Error deleting", response.filename)
+
+
 def run(server_id):
     # ip and port of the current primary
     primary_ip = constants.IP_PORT_DICT[server_id][0]
@@ -53,7 +65,9 @@ def run(server_id):
         username = signinLoop(stub)
         print("Congratulations! You have connected to the collaborative file editing server.\n")
         responseStream = stub.Listen(texteditor_pb2.Username(name=username))
+        deleteStream = stub.ListenForDeletes(texteditor_pb2.Username(name=username))
         start_new_thread(listen_thread, (stub, responseStream))
+        start_new_thread(delete_thread, (stub, deleteStream))
 
         EditorGUI(stub)
 

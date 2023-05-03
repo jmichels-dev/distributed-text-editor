@@ -46,3 +46,23 @@ class Payload(_message.Message):
     MSG_FIELD_NUMBER: _ClassVar[int]
     msg: str
     def __init__(self, msg: _Optional[str] = ...) -> None: ...
+
+class Unreads(_message.Message):
+    __slots__ = ["errorFlag", "unreads"]
+    ERRORFLAG_FIELD_NUMBER: _ClassVar[int]
+    UNREADS_FIELD_NUMBER: _ClassVar[int]
+    errorFlag: bool
+    unreads: str
+    def __init__(self, errorFlag: bool = ..., unreads: _Optional[str] = ...) -> None: ...
+
+class Username(_message.Message):
+    __slots__ = ["name"]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    name: str
+    def __init__(self, name: _Optional[str] = ...) -> None: ...
+
+class Welcome(_message.Message):
+    __slots__ = ["welcomeMsg"]
+    WELCOMEMSG_FIELD_NUMBER: _ClassVar[int]
+    welcomeMsg: str
+    def __init__(self, welcomeMsg: _Optional[str] = ...) -> None: ...

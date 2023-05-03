@@ -23,6 +23,8 @@ service TextEditor {
     rpc Heartbeats(stream KeepAliveRequest) returns (stream KeepAliveResponse) {}
     // Response stream for client to receive messages from server
     rpc Listen(Username) returns (stream Download) {}
+    // Response stream for client to delete files from server
+    rpc ListenForDeletes(Username) returns (stream Download) {}
     // Signs in existing user and gets unread messages.
     rpc SignInExisting(Username) returns (Unreads) {}
 }

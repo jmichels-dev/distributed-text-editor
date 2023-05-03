@@ -19,6 +19,7 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
         self.filenames = set()
         # {Screen name: [names files to be sent (updated) to this user]}
         self.clientDict = {}
+        self.deleteDict = {}
         # Save current filenames
         for filename in os.listdir("./usertextfiles/"):
             f = os.path.join("./usertextfiles/", filename)
@@ -55,6 +56,7 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
         try:
             os.remove("./usertextfiles/" + file_response.filename)
             self.filenames.remove(file_response.filename)
+            helpers.broadcastUpdate(download.filename, self.deleteDict)
             return texteditor_pb2.FileResponse(errorFlag=False, filename=file_response.filename)
         except:
             print("os remove exception!")
@@ -96,29 +98,32 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
     def SignInExisting(self, username, context):
         eFlag, msg = helpers.signInExisting(username.name, self.clientDict)
         return texteditor_pb2.Unreads(errorFlag=eFlag, unreads=msg)
-    
-#     def AddUser(self, username, context):
-#         eFlag, msg = helpers_grpc.addUser(username.name, self.clientDict)
-#         return texteditor_pb2.Unreads(errorFlag=eFlag, unreads=msg)
-
-#     def Send(self, sendRequest, context):
-#         response = helpers_grpc.sendMsg(sendRequest.sender.name, sendRequest.recipient.name, 
-#                                         sendRequest.sentMsg.msg, self.clientDict)
-#         return texteditor_pb2.Payload(msg=response)
 
     # usernameStream only comes from logged-in user
     def Listen(self, username, context):
         self.clientDict[username.name] = []
         while True:
-            # If any flies need to be updated
+            # If any files need to be updated
             if len(self.clientDict[username.name]) > 0:
                 contents = ""
-                with open("./usertextfiles/" + self.clientDict[username.name][0]) as f:
-                    while f.readline != "":
-                        contents += f.readline()
+                with open("./usertextfiles/" + self.clientDict[username.name][0], "rb") as f:
+                    contents = f.read()
                 contents = contents.encode()
                 # Yield first file update
                 yield texteditor_pb2.Download(filename=self.clientDict[username.name].pop(0), contents=contents)
+            # # Stop stream if user logs out
+            # if self.clientDict[username.name][0] == False:
+            #     break
+
+    # usernameStream only comes from logged-in user
+    def ListenForDeletes(self, username, context):
+        self.deleteDict[username.name] = []
+        while True:
+            # If any files need to be deleted
+            if len(self.deleteDict[username.name]) > 0:
+                # Yield first file to delete
+                contents = "".encode()
+                yield texteditor_pb2.Download(filename=self.deleteDict[username.name].pop(0), contents=contents)
             # # Stop stream if user logs out
             # if self.clientDict[username.name][0] == False:
             #     break
