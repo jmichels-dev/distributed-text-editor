@@ -1,10 +1,13 @@
 import tkinter as tk
 from tkinter.filedialog import askopenfilename, asksaveasfilename
 from tkinter import messagebox
+from _thread import *
+import os
 
 import grpc
 import texteditor_pb2
 import texteditor_pb2_grpc
+import helpers
 
 """Starter code source: realpython.com/python-gui-tkinter/#building-a-text-editor-example-app"""
 
@@ -37,6 +40,14 @@ class EditorGUI():
         frm_buttons.grid(row=0, column=0, sticky="ns")
         self.txt_edit.grid(row=0, column=1, sticky="nsew")
 
+        username = self.signinLoop(stub)
+        print("Congratulations! You have connected to the collaborative file editing server.\n")
+
+        responseStream = stub.Listen(texteditor_pb2.Username(name=username))
+        deleteStream = stub.ListenForDeletes(texteditor_pb2.Username(name=username))
+        start_new_thread(self.listen_thread, (stub, responseStream))
+        start_new_thread(self.delete_thread, (stub, deleteStream))
+
         self.window.mainloop()
 
     def new_file(self):
@@ -55,8 +66,10 @@ class EditorGUI():
 
     def update_file(self, filename, contents):
         """Update file with edits from a different client"""
-        filepath = "./usertextfiles/" + filename
-        self.txt_edit.insert(tk.END, text)
+        title_name = self.title.split("/")[-1]
+        if title_name == filename:
+            self.txt_edit.delete("1.0", tk.END)
+            self.txt_edit.insert("1.0", contents)
 
     def open_file(self):
         """Open a file for editing."""
@@ -154,6 +167,47 @@ class EditorGUI():
         self.btn_delete.config(state="normal")
         if download_response.errorFlag:
             messagebox.showinfo("File Save Error", "Error saving " + download_response.filename + ".txt")
+
+    # Listens for messages from server's Listen response stream. Closes when user logs out or deletes acct.
+    def listen_thread(self, stub, responseStream):
+        while True:
+            print("listening...")
+            # try:
+            response = next(responseStream)
+            print(response.filename)
+            if response.filename == ".DS_Store":
+                continue
+            with open("./usertextfiles/" + response.filename, "wb") as f:
+                f.write(response.contents)
+            self.update_file(response.filename, response.contents.decode())
+            # except:
+            #     return
+
+    # Listens for deletes from server
+    def delete_thread(self, stub, deleteStream):
+        while True:
+            # try:
+            response = next(deleteStream)
+            # print(response.filename)
+            os.remove("./usertextfiles/" + response.filename)
+            # except:
+            #     print("Error deleting", response.filename)
+        
+    def signinLoop(self, stub):
+        print("Please enter screen name")
+        username = input("Screen name: ")
+        # Username error check
+        if helpers.isValidUsername(username):
+            # Remove whitespace
+            username = username.strip().lower()
+            unreadsOrError = stub.SignInExisting(texteditor_pb2.Username(name=username))
+            eFlag, msg = unreadsOrError.errorFlag, unreadsOrError.unreads
+        if eFlag:
+            print(msg)
+            return signinLoop(stub)
+        else:
+            print(msg)
+            return username
 
 
     """Old local versions of save"""
