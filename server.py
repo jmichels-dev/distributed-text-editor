@@ -101,7 +101,7 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
 
     # usernameStream only comes from logged-in user
     def Listen(self, username, context):
-        self.clientDict[username.name] = []
+        self.clientDict[username.name] = list(self.filenames)
         while True:
             # If any files need to be updated
             if len(self.clientDict[username.name]) > 0:

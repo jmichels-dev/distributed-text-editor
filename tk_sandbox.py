@@ -53,6 +53,11 @@ class EditorGUI():
         self.title = "Distributed Collaborative Text Editor - New File"
         self.new_file_flag = True
 
+    def update_file(self, filename, contents):
+        """Update file with edits from a different client"""
+        filepath = "./usertextfiles/" + filename
+        self.txt_edit.insert(tk.END, text)
+
     def open_file(self):
         """Open a file for editing."""
         filepath = askopenfilename(
@@ -62,6 +67,7 @@ class EditorGUI():
         if not filepath:
             return
 
+        # Prompt user to save non-empty files
         if self.txt_edit.get("1.0", tk.END).strip() != "":
             response = messagebox.askyesnocancel("Save File", "Do you want to save your changes before creating a new file?")
             if response == True:
