@@ -21,6 +21,23 @@ service TextEditor {
     // Periodic messages from primary server to each backup server to 
     // determine if primary server or backup servers have failed
     rpc Heartbeats(stream KeepAliveRequest) returns (stream KeepAliveResponse) {}
+    // Response stream for client to receive messages from server
+    rpc Listen(Username) returns (stream Download) {}
+    // Signs in existing user and gets unread messages.
+    rpc SignInExisting(Username) returns (Unreads) {}
+}
+
+message Username {
+    string name = 1;
+}
+
+message Welcome {
+    string welcomeMsg = 1;
+}
+
+message Unreads {
+    bool errorFlag = 1;
+    string unreads = 2;
 }
 
 message Download {

@@ -47,6 +47,16 @@ class TextEditorStub(object):
                 request_serializer=texteditor__pb2.KeepAliveRequest.SerializeToString,
                 response_deserializer=texteditor__pb2.KeepAliveResponse.FromString,
                 )
+        self.Listen = channel.unary_stream(
+                '/chat.TextEditor/Listen',
+                request_serializer=texteditor__pb2.Username.SerializeToString,
+                response_deserializer=texteditor__pb2.Download.FromString,
+                )
+        self.SignInExisting = channel.unary_unary(
+                '/chat.TextEditor/SignInExisting',
+                request_serializer=texteditor__pb2.Username.SerializeToString,
+                response_deserializer=texteditor__pb2.Unreads.FromString,
+                )
 
 
 class TextEditorServicer(object):
@@ -100,6 +110,20 @@ class TextEditorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Listen(self, request, context):
+        """Response stream for client to receive messages from server
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SignInExisting(self, request, context):
+        """Signs in existing user and gets unread messages.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_TextEditorServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -132,6 +156,16 @@ def add_TextEditorServicer_to_server(servicer, server):
                     servicer.Heartbeats,
                     request_deserializer=texteditor__pb2.KeepAliveRequest.FromString,
                     response_serializer=texteditor__pb2.KeepAliveResponse.SerializeToString,
+            ),
+            'Listen': grpc.unary_stream_rpc_method_handler(
+                    servicer.Listen,
+                    request_deserializer=texteditor__pb2.Username.FromString,
+                    response_serializer=texteditor__pb2.Download.SerializeToString,
+            ),
+            'SignInExisting': grpc.unary_unary_rpc_method_handler(
+                    servicer.SignInExisting,
+                    request_deserializer=texteditor__pb2.Username.FromString,
+                    response_serializer=texteditor__pb2.Unreads.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -245,5 +279,39 @@ class TextEditor(object):
         return grpc.experimental.stream_stream(request_iterator, target, '/chat.TextEditor/Heartbeats',
             texteditor__pb2.KeepAliveRequest.SerializeToString,
             texteditor__pb2.KeepAliveResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Listen(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/chat.TextEditor/Listen',
+            texteditor__pb2.Username.SerializeToString,
+            texteditor__pb2.Download.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SignInExisting(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/chat.TextEditor/SignInExisting',
+            texteditor__pb2.Username.SerializeToString,
+            texteditor__pb2.Unreads.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -17,6 +17,8 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
         self.server_id = server_id
         # set of (unique) filenames
         self.filenames = set()
+        # {Screen name: [names files to be sent (updated) to this user]}
+        self.clientDict = {}
         # Save current filenames
         for filename in os.listdir("./usertextfiles/"):
             f = os.path.join("./usertextfiles/", filename)
@@ -27,16 +29,17 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
         self.backup_edits = {}
         self.backup_servers = set()
 
-
     def SaveToServer(self, download, context):
         """Send saved file to primary server and overwrite any existing file with same name"""
         if not helpers.filenameExists(download.filename, self.filenames):
+            print("saving file: " + download.filename)
             self.filenames.add(download.filename)
         try:
             with open("./usertextfiles/" + download.filename, "wb") as f:
                 f.write(download.contents)
                 for key in self.backup_edits:
                     self.backup_edits[key].append(download)
+                helpers.broadcastUpdate(download.filename, self.clientDict)
                 return texteditor_pb2.FileResponse(errorFlag=False, filename=download.filename)
         except:
             context.set_code(grpc.StatusCode.NOT_FOUND)
@@ -44,6 +47,7 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             return texteditor_pb2.FileResponse(errorFlag=True, filename=download.filename)
     
     def DeleteFromServer(self, file_response, context):
+        print("deleting file: " + file_response.filename)
         """Delete file from primary server"""
         if not helpers.filenameExists(file_response.filename, self.filenames):
             print("Trying to delete a file that doesn't exist!")
@@ -89,9 +93,9 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             if this_backup_id.backup_id in self.backup_edits and len(self.backup_edits[this_backup_id.backup_id]) > 0:
                 yield self.backup_edits[this_backup_id.backup_id].pop(0)
 
-#     def SignInExisting(self, username, context):
-#         eFlag, msg = helpers_grpc.signInExisting(username.name, self.clientDict)
-#         return texteditor_pb2.Unreads(errorFlag=eFlag, unreads=msg)
+    def SignInExisting(self, username, context):
+        eFlag, msg = helpers.signInExisting(username.name, self.clientDict)
+        return texteditor_pb2.Unreads(errorFlag=eFlag, unreads=msg)
     
 #     def AddUser(self, username, context):
 #         eFlag, msg = helpers_grpc.addUser(username.name, self.clientDict)
@@ -102,16 +106,22 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
 #                                         sendRequest.sentMsg.msg, self.clientDict)
 #         return texteditor_pb2.Payload(msg=response)
 
-#     # usernameStream only comes from logged-in user
-#     def Listen(self, username, context):
-#         while True:
-#             # If any messages are queued
-#             if len(self.clientDict[username.name][1]) > 0:
-#                 # Yield first message
-#                 yield texteditor_pb2.Payload(msg=self.clientDict[username.name][1].pop(0))
-#             # Stop stream if user logs out
-#             if self.clientDict[username.name][0] == False:
-#                 break
+    # usernameStream only comes from logged-in user
+    def Listen(self, username, context):
+        self.clientDict[username.name] = []
+        while True:
+            # If any flies need to be updated
+            if len(self.clientDict[username.name]) > 0:
+                contents = ""
+                with open("./usertextfiles/" + self.clientDict[username.name][0]) as f:
+                    while f.readline != "":
+                        contents += f.readline()
+                contents = contents.encode()
+                # Yield first file update
+                yield texteditor_pb2.Download(filename=self.clientDict[username.name].pop(0), contents=contents)
+            # # Stop stream if user logs out
+            # if self.clientDict[username.name][0] == False:
+            #     break
 
 #     def List(self, wildcard, context):
 #         payload = helpers_grpc.sendUserlist(wildcard.msg, self.clientDict)
