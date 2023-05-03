@@ -56,7 +56,7 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
         try:
             os.remove("./usertextfiles/" + file_response.filename)
             self.filenames.remove(file_response.filename)
-            helpers.broadcastUpdate(download.filename, self.deleteDict)
+            helpers.broadcastUpdate(file_response.filename, self.deleteDict)
             return texteditor_pb2.FileResponse(errorFlag=False, filename=file_response.filename)
         except:
             print("os remove exception!")
@@ -106,7 +106,7 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             # If any files need to be updated
             if len(self.clientDict[username.name]) > 0:
                 contents = ""
-                with open("./usertextfiles/" + self.clientDict[username.name][0], "rb") as f:
+                with open("./usertextfiles/" + self.clientDict[username.name][0], "r") as f:
                     contents = f.read()
                 contents = contents.encode()
                 # Yield first file update

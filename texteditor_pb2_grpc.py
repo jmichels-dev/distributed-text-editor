@@ -52,6 +52,11 @@ class TextEditorStub(object):
                 request_serializer=texteditor__pb2.Username.SerializeToString,
                 response_deserializer=texteditor__pb2.Download.FromString,
                 )
+        self.ListenForDeletes = channel.unary_stream(
+                '/chat.TextEditor/ListenForDeletes',
+                request_serializer=texteditor__pb2.Username.SerializeToString,
+                response_deserializer=texteditor__pb2.Download.FromString,
+                )
         self.SignInExisting = channel.unary_unary(
                 '/chat.TextEditor/SignInExisting',
                 request_serializer=texteditor__pb2.Username.SerializeToString,
@@ -117,6 +122,13 @@ class TextEditorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ListenForDeletes(self, request, context):
+        """Response stream for client to delete files from server
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def SignInExisting(self, request, context):
         """Signs in existing user and gets unread messages.
         """
@@ -159,6 +171,11 @@ def add_TextEditorServicer_to_server(servicer, server):
             ),
             'Listen': grpc.unary_stream_rpc_method_handler(
                     servicer.Listen,
+                    request_deserializer=texteditor__pb2.Username.FromString,
+                    response_serializer=texteditor__pb2.Download.SerializeToString,
+            ),
+            'ListenForDeletes': grpc.unary_stream_rpc_method_handler(
+                    servicer.ListenForDeletes,
                     request_deserializer=texteditor__pb2.Username.FromString,
                     response_serializer=texteditor__pb2.Download.SerializeToString,
             ),
@@ -294,6 +311,23 @@ class TextEditor(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_stream(request, target, '/chat.TextEditor/Listen',
+            texteditor__pb2.Username.SerializeToString,
+            texteditor__pb2.Download.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ListenForDeletes(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/chat.TextEditor/ListenForDeletes',
             texteditor__pb2.Username.SerializeToString,
             texteditor__pb2.Download.FromString,
             options, channel_credentials,
