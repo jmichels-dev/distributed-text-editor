@@ -16,12 +16,12 @@ service TextEditor {
     rpc OpenNewFile(Download) returns (FileResponse) {}
     // Opens existing text file
     rpc OpenExistingFile(Download) returns (stream Data) {}
-    // // Response stream for client to receive messages from server
-    // rpc Listen(Filename) returns (stream Update) {}
+    // Response stream for client to receive messages from server
+    rpc Listen(Username) returns (stream Download) {}
 
 
     // Signs in existing user and gets unread messages.
-    rpc SignInExisting(Username) returns (Welcome) {}
+    rpc SignInExisting(Username) returns (Unreads) {}
     // Signs in new user and gets unread messages.
     rpc AddUser(Username) returns (Welcome) {}
     // Sends message to recipient with Username

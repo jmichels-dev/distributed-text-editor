@@ -6,30 +6,55 @@ from tkinter import ttk
 from tk_sandbox import EditorGUI
 import ctypes
 import time
+import threading
 
 import grpc
 import texteditor_pb2
 import texteditor_pb2_grpc
 
-import helpers        
+import helpers       
+
+def signinLoop(stub):
+        print("Please enter screen name")
+        username = input("Screen name: ")
+        # Username error check
+        if helpers.isValidUsername(username):
+            # Remove whitespace
+            username = username.strip().lower()
+            unreadsOrError = stub.SignInExisting(texteditor_pb2.Username(name=username))
+            eFlag, msg = unreadsOrError.errorFlag, unreadsOrError.unreads
+        if eFlag:
+            print(msg)
+            return signinLoop(stub)
+        else:
+            print(msg)
+            return username
 
 # Listens for messages from server's Listen response stream. Closes when user logs out or deletes acct.
-def listen_thread(username, stub, responseStream):
+def listen_thread(stub, responseStream):
     while True:
+        print("listening...")
         try:
             response = next(responseStream)
-            print(response.msg)
+            print(response.filename)
+            with open("./usertextfiles/" + response.filename, "wb") as f:
+                while True:
+                    f.write(response.contents)
         except:
             return
 
 def run():
-    # ip = '10.250.226.222'
-    ip = '127.0.0.1'
+    ip = '10.250.226.222'
+    #ip = '127.0.0.1'
     port = '8080'
     with grpc.insecure_channel('{}:{}'.format(ip, port)) as channel:
         stub = texteditor_pb2_grpc.TextEditorStub(channel)
+        username = signinLoop(stub)
         print("Congratulations! You have connected to the collaborative file editing server.\n")
-        
+
+        responseStream = stub.Listen(texteditor_pb2.Username(name=username))
+        start_new_thread(listen_thread, (stub, responseStream))
+
         editor = EditorGUI(stub)
 
         print("is this blocking?")

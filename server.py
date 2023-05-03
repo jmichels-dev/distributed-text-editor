@@ -14,20 +14,26 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
     def __init__(self):
         # set of (unique) filenames
         self.filenames = set()
+
+        # {Screen name: [names files to be sent (updated) to this user]}
+        self.clientDict = {}
         for filename in os.listdir("./usertextfiles/"):
             f = os.path.join("./usertextfiles/", filename)
             # checking if it is a file
             if os.path.isfile(f):
                 self.filenames.add(filename)
+        
 
     def SaveToServer(self, download, context):
         """Send saved file to primary server and overwrite any existing file with same name"""
         if not helpers.filenameExists(download.filename, self.filenames):
+            print("saving file: " + download.filename)
             self.filenames.add(download.filename)
         try:
             with open("./usertextfiles/" + download.filename, "wb") as f:
                 while True:
                     f.write(download.contents)
+                    helpers.broadcastUpdate(download.filename, self.clientDict)
                     return texteditor_pb2.FileResponse(errorFlag=False, filename=download.filename)
         except:
             context.set_code(grpc.StatusCode.NOT_FOUND)
@@ -35,6 +41,7 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             return texteditor_pb2.FileResponse(errorFlag=True, filename=download.filename)
     
     def DeleteFromServer(self, file_response, context):
+        print("deleting file: " + file_response.filename)
         """Delete file from primary server"""
         if not helpers.filenameExists(file_response.filename, self.filenames):
             print("Trying to delete a file that doesn't exist!")
@@ -111,9 +118,9 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
         return texteditor_pb2.FileResponse(errorFlag=False, filename=download.filename)
 
 
-#     def SignInExisting(self, username, context):
-#         eFlag, msg = helpers_grpc.signInExisting(username.name, self.clientDict)
-#         return texteditor_pb2.Unreads(errorFlag=eFlag, unreads=msg)
+    def SignInExisting(self, username, context):
+        eFlag, msg = helpers.signInExisting(username.name, self.clientDict)
+        return texteditor_pb2.Unreads(errorFlag=eFlag, unreads=msg)
     
 #     def AddUser(self, username, context):
 #         eFlag, msg = helpers_grpc.addUser(username.name, self.clientDict)
@@ -124,16 +131,22 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
 #                                         sendRequest.sentMsg.msg, self.clientDict)
 #         return texteditor_pb2.Payload(msg=response)
 
-#     # usernameStream only comes from logged-in user
-#     def Listen(self, username, context):
-#         while True:
-#             # If any messages are queued
-#             if len(self.clientDict[username.name][1]) > 0:
-#                 # Yield first message
-#                 yield texteditor_pb2.Payload(msg=self.clientDict[username.name][1].pop(0))
-#             # Stop stream if user logs out
-#             if self.clientDict[username.name][0] == False:
-#                 break
+    # usernameStream only comes from logged-in user
+    def Listen(self, username, context):
+        self.clientDict[username.name] = []
+        while True:
+            # If any flies need to be updated
+            if len(self.clientDict[username.name]) > 0:
+                contents = ""
+                with open("./usertextfiles/" + self.clientDict[username.name][0]) as f:
+                    while f.readline != "":
+                        contents += f.readline()
+                contents = contents.encode()
+                # Yield first file update
+                yield texteditor_pb2.Download(filename=self.clientDict[username.name].pop(0), contents=contents)
+            # # Stop stream if user logs out
+            # if self.clientDict[username.name][0] == False:
+            #     break
 
 #     def List(self, wildcard, context):
 #         payload = helpers_grpc.sendUserlist(wildcard.msg, self.clientDict)
@@ -149,8 +162,8 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
 
 
 def serve():
-    # ip = '10.250.226.222'
-    ip = '127.0.0.1'
+    ip = '10.250.226.222'
+    #ip = '127.0.0.1'
     port = '8080'
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     texteditor_pb2_grpc.add_TextEditorServicer_to_server(TextEditorServicer(), server)
