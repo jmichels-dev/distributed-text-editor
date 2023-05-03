@@ -40,7 +40,7 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
                 f.write(download.contents)
                 for key in self.backup_edits:
                     self.backup_edits[key].append(download)
-                helpers.broadcastUpdate(download.filename, self.clientDict)
+                helpers.broadcastUpdate(download.filename, self.clientDict, self.username)
                 return texteditor_pb2.FileResponse(errorFlag=False, filename=download.filename)
         except:
             context.set_code(grpc.StatusCode.NOT_FOUND)
@@ -109,7 +109,7 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
                 with open("./usertextfiles/" + self.clientDict[username.name][0], "rb") as f:
                     contents = f.read()
                 # Yield first file update
-                yield texteditor_pb2.Download(filename=self.clientDict[username.name].pop(0), contents=contents)
+                yield texteditor_pb2.Download(filename=self.clientDict[username.name].pop(0), user=username.name, contents=contents)
             # # Stop stream if user logs out
             # if self.clientDict[username.name][0] == False:
             #     break
@@ -122,7 +122,7 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             if len(self.deleteDict[username.name]) > 0:
                 # Yield first file to delete
                 contents = "".encode()
-                yield texteditor_pb2.Download(filename=self.deleteDict[username.name].pop(0), contents=contents)
+                yield texteditor_pb2.Download(filename=self.deleteDict[username.name].pop(0), user=username.name, contents=contents)
             # # Stop stream if user logs out
             # if self.clientDict[username.name][0] == False:
             #     break

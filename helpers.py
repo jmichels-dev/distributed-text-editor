@@ -18,8 +18,9 @@ def signInExisting(username, clientDict):
         return (True, "Someone has already chosen this screen name. Please choose another.")
     return (False, "You have entered the text editor.")
 
-def broadcastUpdate(filename, clientDict):
+def broadcastUpdate(filename, clientDict, savingUser):
     for client in clientDict:
-        clientDict[client].append(filename)
+        if client != savingUser:
+            clientDict[client].append(filename)
 
 

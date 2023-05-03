@@ -44,6 +44,7 @@ message Unreads {
 
 message Download {
     string filename = 1;
+    string user = 2;
     // bool newFileFlag = 2;
     bytes contents = 3;
 }

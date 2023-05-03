@@ -40,11 +40,11 @@ class EditorGUI():
         frm_buttons.grid(row=0, column=0, sticky="ns")
         self.txt_edit.grid(row=0, column=1, sticky="nsew")
 
-        username = self.signinLoop(stub)
+        self.username = self.signinLoop(stub)
         print("Congratulations! You have connected to the collaborative file editing server.\n")
 
-        responseStream = stub.Listen(texteditor_pb2.Username(name=username))
-        deleteStream = stub.ListenForDeletes(texteditor_pb2.Username(name=username))
+        responseStream = stub.Listen(texteditor_pb2.Username(name=self.username))
+        deleteStream = stub.ListenForDeletes(texteditor_pb2.Username(name=self.username))
         start_new_thread(self.listen_thread, (stub, responseStream))
         start_new_thread(self.delete_thread, (stub, deleteStream))
 
@@ -68,7 +68,6 @@ class EditorGUI():
         """Update file with edits from a different client"""
         title_name = self.title.split("/")[-1]
         if title_name == filename:
-            self.txt_edit.delete("1.0", tk.END)
             self.txt_edit.insert("1.0", contents)
 
     def open_file(self):
@@ -129,7 +128,7 @@ class EditorGUI():
             filename = filepath.split("/")[-1]
             text = self.txt_edit.get("1.0", tk.END)
             contents = text.encode()
-            download_response = self.stub.SaveToServer(texteditor_pb2.Download(filename=filename, contents=contents))
+            download_response = self.stub.SaveToServer(texteditor_pb2.Download(filename=filename, user=self.username, contents=contents))
             self.window.title(f"Distributed Collaborative Text Editor - {filepath}")
             self.title = f"Distributed Collaborative Text Editor - {filepath}"
             if download_response.errorFlag: 
