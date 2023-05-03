@@ -68,7 +68,7 @@ class EditorGUI():
         """Update file with edits from a different client"""
         title_name = self.title.split("/")[-1]
         if title_name == filename:
-            self.txt_edit.insert("1.0", contents)
+            self.txt_edit.replace("1.0", contents)
 
     def open_file(self):
         """Open a file for editing."""
