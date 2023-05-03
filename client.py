@@ -32,8 +32,8 @@ def signinLoop(stub):
             print(msg)
             return username
 
-def updateFile(filename, contents):
-    editor.update_file(filename, contents)
+# def updateFile(filename, contents):
+#     editor.update_file(filename, contents)
 
 # Listens for messages from server's Listen response stream. Closes when user logs out or deletes acct.
 def listen_thread(stub, responseStream):
@@ -69,12 +69,13 @@ def run(server_id):
         print("Congratulations! You have connected to the collaborative file editing server.\n")
         # global editor 
         # editor = EditorGUI(stub)
-        EditorGUI(stub)
 
         responseStream = stub.Listen(texteditor_pb2.Username(name=username))
         deleteStream = stub.ListenForDeletes(texteditor_pb2.Username(name=username))
         start_new_thread(listen_thread, (stub, responseStream))
         start_new_thread(delete_thread, (stub, deleteStream))
+
+        EditorGUI(stub)
 
 
 if __name__ == '__main__':
