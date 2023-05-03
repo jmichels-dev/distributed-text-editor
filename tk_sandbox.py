@@ -16,6 +16,9 @@ class EditorGUI():
         """Run text editor GUI and save key attributes"""
         self.stub = stub
 
+        username = self.signinLoop(stub)
+        print("Congratulations! You have connected to the collaborative file editing server.\n")
+
         self.window = tk.Tk()
         self.window.title("Distributed Collaborative Text Editor - New File")
         self.title = "Distributed Collaborative Text Editor - New File"
@@ -39,9 +42,6 @@ class EditorGUI():
 
         frm_buttons.grid(row=0, column=0, sticky="ns")
         self.txt_edit.grid(row=0, column=1, sticky="nsew")
-
-        username = self.signinLoop(stub)
-        print("Congratulations! You have connected to the collaborative file editing server.\n")
 
         responseStream = stub.Listen(texteditor_pb2.Username(name=username))
         deleteStream = stub.ListenForDeletes(texteditor_pb2.Username(name=username))
