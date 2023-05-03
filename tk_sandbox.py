@@ -172,26 +172,27 @@ class EditorGUI():
     def listen_thread(self, stub, responseStream):
         while True:
             print("listening...")
-            # try:
-            response = next(responseStream)
-            print(response.filename)
-            if response.filename == ".DS_Store":
-                continue
-            with open("./usertextfiles/" + response.filename, "wb") as f:
-                f.write(response.contents)
-            self.update_file(response.filename, response.contents.decode())
-            # except:
-            #     return
+            try:
+                response = next(responseStream)
+                print(response.filename)
+                if response.filename == ".DS_Store":
+                    continue
+                with open("./usertextfiles/" + response.filename, "wb") as f:
+                    f.write(response.contents)
+                self.update_file(response.filename, response.contents.decode())
+            except:
+                print("Listening error")
+                return
 
     # Listens for deletes from server
     def delete_thread(self, stub, deleteStream):
         while True:
-            # try:
-            response = next(deleteStream)
+            try:
+                response = next(deleteStream)
             # print(response.filename)
-            os.remove("./usertextfiles/" + response.filename)
-            # except:
-            #     print("Error deleting", response.filename)
+                os.remove("./usertextfiles/" + response.filename)
+            except:
+                print("Already deleted", response.filename)
         
     def signinLoop(self, stub):
         print("Please enter screen name")
