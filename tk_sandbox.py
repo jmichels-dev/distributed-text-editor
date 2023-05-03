@@ -159,7 +159,7 @@ class EditorGUI():
         filename = filepath.split("/")[-1]
         text = self.txt_edit.get("1.0", tk.END)
         contents = text.encode()
-        download_response = self.stub.SaveToServer(texteditor_pb2.Download(filename=filename, contents=contents))
+        download_response = self.stub.SaveToServer(texteditor_pb2.Download(filename=filename, user=self.username, contents=contents))
         self.window.title(f"Distributed Collaborative Text Editor - {filepath}")
         self.title = f"Distributed Collaborative Text Editor - {filepath}"
         self.new_file_flag = False
