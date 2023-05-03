@@ -33,6 +33,8 @@ def signinLoop(stub):
             return username
 
 def updateFile(filename, contents):
+    print("Hello")
+    global editor
     editor.update_file(filename, contents)
 
 # Listens for messages from server's Listen response stream. Closes when user logs out or deletes acct.
@@ -44,7 +46,8 @@ def listen_thread(stub, responseStream):
             print(response.filename)
             with open("./usertextfiles/" + response.filename, "wb") as f:
                 f.write(response.contents)
-            # update_file(response.filename, response.contents.decode('utf-8'))
+            print("In listen thread")
+            update_file(response.filename, response.contents.decode('utf-8'))
         except:
             return
 
@@ -67,9 +70,8 @@ def run(server_id):
         stub = texteditor_pb2_grpc.TextEditorStub(channel)
         username = signinLoop(stub)
         print("Congratulations! You have connected to the collaborative file editing server.\n")
-        # global editor 
-        # editor = EditorGUI(stub)
-        EditorGUI(stub)
+        global editor 
+        editor = EditorGUI(stub)
 
         responseStream = stub.Listen(texteditor_pb2.Username(name=username))
         deleteStream = stub.ListenForDeletes(texteditor_pb2.Username(name=username))
