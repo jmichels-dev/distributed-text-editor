@@ -192,7 +192,7 @@ class EditorGUI():
             # print(response.filename)
                 os.remove("./usertextfiles/" + response.filename)
             except:
-                print("Already deleted", response.filename)
+                return
         
     def signinLoop(self, stub):
         print("Please enter screen name")
