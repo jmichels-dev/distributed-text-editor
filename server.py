@@ -48,8 +48,8 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
             return texteditor_pb2.FileResponse(errorFlag=True, filename=download.filename)
     
     def DeleteFromServer(self, file_response, context):
-        print("deleting file: " + file_response.filename)
         """Delete file from primary server"""
+        print("deleting file: " + file_response.filename)
         if not helpers.filenameExists(file_response.filename, self.filenames):
             print("Trying to delete a file that doesn't exist!")
             return texteditor_pb2.FileResponse(errorFlag=True, filename=file_response.filename)
@@ -96,11 +96,13 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
                 yield self.backup_edits[this_backup_id.backup_id].pop(0)
 
     def SignInExisting(self, username, context):
+        """Save client username to allow server to uniquely identify clients"""
         eFlag, msg = helpers.signInExisting(username.name, self.clientDict)
         return texteditor_pb2.Unreads(errorFlag=eFlag, unreads=msg)
 
     # usernameStream only comes from logged-in user
     def Listen(self, username, context):
+        """Propagate file updates to all clients"""
         self.clientDict[username.name] = list(self.filenames)
         while True:
             # If any files need to be updated
@@ -110,12 +112,10 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
                     contents = f.read()
                 # Yield first file update
                 yield texteditor_pb2.Download(filename=self.clientDict[username.name].pop(0), contents=contents)
-            # # Stop stream if user logs out
-            # if self.clientDict[username.name][0] == False:
-            #     break
 
     # usernameStream only comes from logged-in user
     def ListenForDeletes(self, username, context):
+        """Propagate all file deletions to all clients"""
         self.deleteDict[username.name] = []
         while True:
             # If any files need to be deleted
@@ -123,21 +123,6 @@ class TextEditorServicer(texteditor_pb2_grpc.TextEditorServicer):
                 # Yield first file to delete
                 contents = "".encode()
                 yield texteditor_pb2.Download(filename=self.deleteDict[username.name].pop(0), contents=contents)
-            # # Stop stream if user logs out
-            # if self.clientDict[username.name][0] == False:
-            #     break
-
-#     def List(self, wildcard, context):
-#         payload = helpers_grpc.sendUserlist(wildcard.msg, self.clientDict)
-#         return texteditor_pb2.Payload(msg=payload)
-
-#     def Logout(self, username, context):
-#         self.clientDict[username.name][0] = False
-#         return texteditor_pb2.Payload(msg="Goodbye!\n")
-
-#     def Delete(self, username, context):
-#         self.clientDict.pop(username.name)
-#         return texteditor_pb2.Payload(msg="Goodbye!\n")
 
 
 def serve(server_id):

@@ -66,9 +66,3 @@ message KeepAliveResponse {
     int32 primary_id = 1;
     repeated int32 backup_ids = 2;
 }
-
-message Payload {
-    string msg = 1;
-}
-
-

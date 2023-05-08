@@ -72,7 +72,7 @@ class EditorGUI():
             self.txt_edit.insert("1.0", contents)
 
     def open_file(self):
-        """Open a file for editing."""
+        """Open a file for editing"""
         filepath = askopenfilename(
             filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")],
             initialdir="./usertextfiles"
@@ -86,7 +86,6 @@ class EditorGUI():
             if response == True:
                 # save the current file
                 self.save()
-        
         self.txt_edit.delete("1.0", tk.END)
         with open(filepath, mode="r", encoding="utf-8") as input_file:
             text = input_file.read()
@@ -209,51 +208,3 @@ class EditorGUI():
         else:
             print(msg)
             return username
-
-
-    """Old local versions of save"""
-    # def save(self):
-    #     """If new file, save as, otherwise save with existing title"""
-    #     if self.new_file_flag:
-    #         self.save_as()
-    #         return
-    #     else:
-    #         title_arr = self.title.split(" - ")
-    #         filepath = title_arr[1]
-    #         if not filepath:
-    #             return
-    #         with open(filepath, mode="w", encoding="utf-8") as output_file:
-    #             text = self.txt_edit.get("1.0", tk.END)
-    #             output_file.write(text)
-    #         self.window.title(f"Distributed Collaborative Text Editor - {filepath}")
-    #         self.title = f"Distributed Collaborative Text Editor - {filepath}"
-    #         messagebox.showinfo("File Saved", "Your file has been saved.")
-
-    # def save_as(self):
-    #     """Save the current file as a new file"""
-    #     if self.new_file_flag:
-    #         filepath = asksaveasfilename(
-    #             defaultextension=".txt",
-    #             filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")],
-    #             initialdir="./usertextfiles"
-    #         )
-    #     # If existing file, autofill the last title
-    #     else:
-    #         title_arr = self.title.split(" - ")
-    #         filepath = title_arr[1]
-    #         filename = filepath.split("/")[-1]
-    #         filepath = asksaveasfilename(
-    #             defaultextension=".txt",
-    #             filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")],
-    #             initialfile=filename,
-    #             initialdir="./usertextfiles"
-    #         )
-    #     if not filepath:
-    #         return
-    #     with open(filepath, mode="w", encoding="utf-8") as output_file:
-    #         text = self.txt_edit.get("1.0", tk.END)
-    #         output_file.write(text)
-    #     self.window.title(f"Distributed Collaborative Text Editor - {filepath}")
-    #     self.title = f"Distributed Collaborative Text Editor - {filepath}"
-    #     self.new_file_flag = False
-    #     self.btn_delete.config(state="normal")
