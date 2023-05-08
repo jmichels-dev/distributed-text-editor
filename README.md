@@ -4,7 +4,6 @@ In /grpc: A 3-fault tolerant distributed collaborative text editor and file shar
 Sections:
 1. Setup (pull from github, required libraries, etc.)
 2. Startup
-4. Operation - gRPC
 
 -----------------------------------------------------------------------------------------------------------------------------------------------
 Overview.
