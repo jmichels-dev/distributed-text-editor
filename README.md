@@ -1,5 +1,5 @@
 # distributed-text-editor
-In /grpc: A 3-fault tolerant distributed collaborative text editor and file sharing system using gRPC
+A 3-fault tolerant distributed collaborative text editor and file sharing system using gRPC
 
 Sections:
 1. Setup (pull from github, required libraries, etc.)
